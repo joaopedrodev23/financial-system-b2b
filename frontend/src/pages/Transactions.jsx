@@ -5,26 +5,30 @@ import {
   createTransaction,
   deleteTransaction,
   exportTransactions,
-  listTransactions
+  listTransactions,
+  updateTransaction
 } from '../api/transactions'
 import { formatCurrency, formatDate } from '../utils/format'
+
+const emptyForm = {
+  date: '',
+  type: 'income',
+  amount: '',
+  description: '',
+  category_id: ''
+}
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState([])
   const [categories, setCategories] = useState([])
+  const [editingId, setEditingId] = useState(null)
   const [filters, setFilters] = useState({
     start_date: '',
     end_date: '',
     type: '',
     category_id: ''
   })
-  const [form, setForm] = useState({
-    date: '',
-    type: 'income',
-    amount: '',
-    description: '',
-    category_id: ''
-  })
+  const [form, setForm] = useState(emptyForm)
 
   const loadData = async () => {
     const params = {}
@@ -47,18 +51,42 @@ export default function Transactions() {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-    await createTransaction({
+    const payload = {
       ...form,
       amount: Number(form.amount),
       category_id: form.category_id || null
-    })
-    setForm({ date: '', type: 'income', amount: '', description: '', category_id: '' })
+    }
+
+    if (editingId) {
+      await updateTransaction(editingId, payload)
+      setEditingId(null)
+    } else {
+      await createTransaction(payload)
+    }
+
+    setForm(emptyForm)
     loadData()
   }
 
   const handleDelete = async (id) => {
     await deleteTransaction(id)
     loadData()
+  }
+
+  const handleEdit = (item) => {
+    setEditingId(item.id)
+    setForm({
+      date: item.date,
+      type: item.type,
+      amount: String(item.amount),
+      description: item.description || '',
+      category_id: item.category_id || ''
+    })
+  }
+
+  const handleCancelEdit = () => {
+    setEditingId(null)
+    setForm(emptyForm)
   }
 
   const handleExport = async () => {
@@ -78,11 +106,11 @@ export default function Transactions() {
   }
 
   return (
-    <Layout title="Lançamentos">
+    <Layout title="Movimentações">
       <section className="panel">
         <div className="panel-header">
-          <h2>Novo lançamento</h2>
-          <p>Registre entradas e saídas financeiras.</p>
+          <h2>{editingId ? 'Editar movimentação' : 'Nova movimentação'}</h2>
+          <p>Registre entradas e saídas do caixa.</p>
         </div>
         <form className="form-grid" onSubmit={handleSubmit}>
           <label>
@@ -136,8 +164,13 @@ export default function Transactions() {
           </label>
           <div className="form-actions">
             <button className="btn btn-primary" type="submit">
-              Salvar lançamento
+              {editingId ? 'Salvar alterações' : 'Salvar movimentação'}
             </button>
+            {editingId && (
+              <button className="btn btn-outline" type="button" onClick={handleCancelEdit}>
+                Cancelar
+              </button>
+            )}
           </div>
         </form>
       </section>
@@ -145,11 +178,11 @@ export default function Transactions() {
       <section className="panel">
         <div className="panel-header">
           <h2>Filtros</h2>
-          <p>Use para localizar períodos e tipos específicos.</p>
+          <p>Escolha um período ou tipo de movimentação.</p>
         </div>
         <div className="filters">
           <label>
-            Início
+            Data inicial
             <input
               type="date"
               value={filters.start_date}
@@ -157,7 +190,7 @@ export default function Transactions() {
             />
           </label>
           <label>
-            Fim
+            Data final
             <input
               type="date"
               value={filters.end_date}
@@ -187,18 +220,18 @@ export default function Transactions() {
             </select>
           </label>
           <button className="btn btn-outline" type="button" onClick={loadData}>
-            Aplicar filtros
+            Filtrar
           </button>
           <button className="btn btn-outline" type="button" onClick={handleExport}>
-            Exportar CSV
+            Baixar CSV
           </button>
         </div>
       </section>
 
       <section className="panel">
         <div className="panel-header">
-          <h2>Lista de lançamentos</h2>
-          <p>Total de registros: {transactions.length}</p>
+          <h2>Lista de movimentações</h2>
+          <p>Total de movimentações: {transactions.length}</p>
         </div>
         <div className="table">
           <div className="table-row table-head">
@@ -214,12 +247,17 @@ export default function Transactions() {
               <span className={`badge ${item.type}`}>{item.type === 'income' ? 'Entrada' : 'Saída'}</span>
               <span>{item.description || 'Sem descrição'}</span>
               <span>{formatCurrency(item.amount)}</span>
-              <button className="btn btn-link" type="button" onClick={() => handleDelete(item.id)}>
-                Excluir
-              </button>
+              <div className="table-actions">
+                <button className="btn btn-link" type="button" onClick={() => handleEdit(item)}>
+                  Editar
+                </button>
+                <button className="btn btn-link" type="button" onClick={() => handleDelete(item.id)}>
+                  Excluir
+                </button>
+              </div>
             </div>
           ))}
-          {!transactions.length && <p className="empty">Nenhum lançamento encontrado.</p>}
+          {!transactions.length && <p className="empty">Nenhuma movimentação encontrada.</p>}
         </div>
       </section>
     </Layout>

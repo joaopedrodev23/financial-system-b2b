@@ -18,6 +18,9 @@ class Settings(BaseSettings):
 
     allowed_origins: str = "http://localhost:5173"
     environment: str = "development"
+    demo_mode: bool = False
+    demo_email: str = "demo@empresa.com"
+    demo_password: str = "demo123"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False)
 

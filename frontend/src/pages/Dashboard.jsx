@@ -30,17 +30,17 @@ export default function Dashboard() {
   }, [])
 
   return (
-    <Layout title="Dashboard">
+    <Layout title="Resumo">
       <section className="filters">
         <div>
           <label>
-            Início
+            Data inicial
             <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
           </label>
         </div>
         <div>
           <label>
-            Fim
+            Data final
             <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
           </label>
         </div>
@@ -57,8 +57,8 @@ export default function Dashboard() {
 
       <section className="panel">
         <div className="panel-header">
-          <h2>Últimos lançamentos</h2>
-          <p>Acompanhe as movimentações mais recentes.</p>
+          <h2>Últimas movimentações</h2>
+          <p>Veja as entradas e saídas mais recentes.</p>
         </div>
         <div className="table">
           <div className="table-row table-head">
@@ -75,7 +75,7 @@ export default function Dashboard() {
               <span>{formatCurrency(item.amount)}</span>
             </div>
           ))}
-          {!transactions.length && <p className="empty">Nenhum lançamento encontrado.</p>}
+          {!transactions.length && <p className="empty">Nenhuma movimentação encontrada.</p>}
         </div>
       </section>
     </Layout>

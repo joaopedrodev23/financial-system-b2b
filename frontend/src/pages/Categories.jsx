@@ -1,10 +1,13 @@
 ﻿import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
-import { createCategory, deleteCategory, listCategories } from '../api/categories'
+import { createCategory, deleteCategory, listCategories, updateCategory } from '../api/categories'
+
+const emptyForm = { name: '', type: 'income' }
 
 export default function Categories() {
   const [categories, setCategories] = useState([])
-  const [form, setForm] = useState({ name: '', type: 'income' })
+  const [form, setForm] = useState(emptyForm)
+  const [editingId, setEditingId] = useState(null)
 
   const loadData = async () => {
     const data = await listCategories()
@@ -17,8 +20,13 @@ export default function Categories() {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-    await createCategory(form)
-    setForm({ name: '', type: 'income' })
+    if (editingId) {
+      await updateCategory(editingId, form)
+      setEditingId(null)
+    } else {
+      await createCategory(form)
+    }
+    setForm(emptyForm)
     loadData()
   }
 
@@ -27,12 +35,22 @@ export default function Categories() {
     loadData()
   }
 
+  const handleEdit = (category) => {
+    setEditingId(category.id)
+    setForm({ name: category.name, type: category.type })
+  }
+
+  const handleCancelEdit = () => {
+    setEditingId(null)
+    setForm(emptyForm)
+  }
+
   return (
     <Layout title="Categorias">
       <section className="panel">
         <div className="panel-header">
-          <h2>Nova categoria</h2>
-          <p>Organize seus lançamentos financeiros.</p>
+          <h2>{editingId ? 'Editar categoria' : 'Nova categoria'}</h2>
+          <p>Organize suas movimentações por tipo.</p>
         </div>
         <form className="form-grid" onSubmit={handleSubmit}>
           <label>
@@ -54,15 +72,20 @@ export default function Categories() {
           </label>
           <div className="form-actions">
             <button className="btn btn-primary" type="submit">
-              Salvar categoria
+              {editingId ? 'Salvar alterações' : 'Salvar categoria'}
             </button>
+            {editingId && (
+              <button className="btn btn-outline" type="button" onClick={handleCancelEdit}>
+                Cancelar
+              </button>
+            )}
           </div>
         </form>
       </section>
 
       <section className="panel">
         <div className="panel-header">
-          <h2>Categorias cadastradas</h2>
+          <h2>Categorias salvas</h2>
           <p>Total: {categories.length}</p>
         </div>
         <div className="table">
@@ -75,9 +98,14 @@ export default function Categories() {
             <div className="table-row" key={category.id}>
               <span>{category.name}</span>
               <span>{category.type === 'income' ? 'Entrada' : category.type === 'expense' ? 'Saída' : 'Ambos'}</span>
-              <button className="btn btn-link" type="button" onClick={() => handleDelete(category.id)}>
-                Excluir
-              </button>
+              <div className="table-actions">
+                <button className="btn btn-link" type="button" onClick={() => handleEdit(category)}>
+                  Editar
+                </button>
+                <button className="btn btn-link" type="button" onClick={() => handleDelete(category.id)}>
+                  Excluir
+                </button>
+              </div>
             </div>
           ))}
           {!categories.length && <p className="empty">Nenhuma categoria encontrada.</p>}

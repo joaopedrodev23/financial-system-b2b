@@ -27,6 +27,12 @@ def register(data: RegisterRequest, db=Depends(get_db)):
 @router.post("/login", response_model=TokenResponse)
 def login(data: LoginRequest, db=Depends(get_db)):
     user_repo = UserRepositoryImpl(db)
+    if settings.demo_mode and data.email == settings.demo_email and data.password == settings.demo_password:
+        user = user_repo.get_by_email(data.email)
+        if not user:
+            user = user_repo.create(email=data.email, hashed_password=get_password_hash(data.password))
+        token = create_access_token(subject=str(user.id), expires_minutes=settings.access_token_expire_minutes)
+        return TokenResponse(access_token=token, expires_in=settings.access_token_expire_minutes * 60)
     user = authenticate_user(user_repo, data.email, data.password, verify_password)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciais inválidas")

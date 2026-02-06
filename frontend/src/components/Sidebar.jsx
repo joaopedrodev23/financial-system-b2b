@@ -9,16 +9,16 @@ export default function Sidebar() {
         <span className="brand-mark">SF</span>
         <div>
           <strong>Sistema Financeiro</strong>
-          <small>Gestão simples</small>
+          <small>Controle do dia a dia</small>
         </div>
       </div>
 
       <nav className="nav">
         <NavLink to="/" end className={linkClass}>
-          Dashboard
+          Resumo
         </NavLink>
         <NavLink to="/transactions" className={linkClass}>
-          Lançamentos
+          Movimentações
         </NavLink>
         <NavLink to="/categories" className={linkClass}>
           Categorias

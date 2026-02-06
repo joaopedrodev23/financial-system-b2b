@@ -11,6 +11,9 @@ export default function Login() {
   const [mode, setMode] = useState('login')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const demoEnabled = import.meta.env.VITE_DEMO_ENABLED === 'true'
+  const demoEmail = import.meta.env.VITE_DEMO_EMAIL || 'demo@empresa.com'
+  const demoPassword = import.meta.env.VITE_DEMO_PASSWORD || 'demo123'
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -23,7 +26,20 @@ export default function Login() {
       await login(email, password)
       navigate('/')
     } catch (err) {
-      setError('Não foi possível autenticar. Verifique os dados.')
+      setError('Não foi possível entrar. Confira e-mail e senha.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDemo = async () => {
+    setError('')
+    setLoading(true)
+    try {
+      await login(demoEmail, demoPassword)
+      navigate('/')
+    } catch (err) {
+      setError('Não foi possível acessar a demonstração agora.')
     } finally {
       setLoading(false)
     }
@@ -36,7 +52,7 @@ export default function Login() {
           <div className="brand-mark">SF</div>
           <div>
             <h1>Sistema Financeiro</h1>
-            <p>Controle financeiro operacional para pequenas empresas.</p>
+            <p>Controle simples de entradas e saídas para o dia a dia.</p>
           </div>
         </div>
 
@@ -73,10 +89,17 @@ export default function Login() {
             type="button"
             onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
           >
-            {mode === 'login'
-              ? 'Primeiro acesso? Crie sua conta'
-              : 'Já tem conta? Fazer login'}
+            {mode === 'login' ? 'Primeiro acesso? Cadastre-se' : 'Já tem conta? Entrar'}
           </button>
+
+          {demoEnabled && (
+            <button className="btn btn-outline" type="button" onClick={handleDemo} disabled={loading}>
+              Entrar na demonstração
+            </button>
+          )}
+          {demoEnabled && (
+            <small className="helper-text">Use a conta de demonstração para conhecer o sistema.</small>
+          )}
         </form>
       </div>
     </div>

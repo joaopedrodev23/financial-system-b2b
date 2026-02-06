@@ -7,7 +7,7 @@ export default function Topbar({ title }) {
     <header className="topbar">
       <div>
         <h1>{title}</h1>
-        <p>Controle financeiro rápido e confiável.</p>
+        <p>Veja o que entrou e saiu do caixa.</p>
       </div>
       <div className="topbar-user">
         <div>
