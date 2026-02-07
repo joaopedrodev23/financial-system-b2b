@@ -1,5 +1,7 @@
 ﻿from datetime import date, datetime
 from decimal import Decimal
+
+MAX_AMOUNT = Decimal("999999999999.99")
 from uuid import UUID
 from pydantic import BaseModel, Field
 from app.domain.entities.transaction import TransactionType
@@ -8,7 +10,7 @@ from app.domain.entities.transaction import TransactionType
 class TransactionCreate(BaseModel):
     category_id: UUID | None = None
     type: TransactionType
-    amount: Decimal = Field(gt=0)
+    amount: Decimal = Field(gt=0, le=MAX_AMOUNT)
     description: str | None = Field(default=None, max_length=255)
     date: date
 
@@ -16,7 +18,7 @@ class TransactionCreate(BaseModel):
 class TransactionUpdate(BaseModel):
     category_id: UUID | None = None
     type: TransactionType
-    amount: Decimal = Field(gt=0)
+    amount: Decimal = Field(gt=0, le=MAX_AMOUNT)
     description: str | None = Field(default=None, max_length=255)
     date: date
 

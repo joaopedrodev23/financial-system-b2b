@@ -1,4 +1,5 @@
 ﻿from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from app.application.schemas.auth import LoginRequest, RegisterRequest, TokenResponse
 from app.application.schemas.user import UserOut
 from app.application.use_cases.auth.authenticate import authenticate_user
@@ -21,6 +22,9 @@ def register(data: RegisterRequest, db=Depends(get_db)):
         user = register_user(user_repo, data.email, data.password, get_password_hash)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="E-mail já cadastrado")
     return UserOut(**user.__dict__)
 
 
@@ -29,8 +33,14 @@ def login(data: LoginRequest, db=Depends(get_db)):
     user_repo = UserRepositoryImpl(db)
     if settings.demo_mode and data.email == settings.demo_email and data.password == settings.demo_password:
         user = user_repo.get_by_email(data.email)
+        if user and not user.is_active:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuário inativo")
         if not user:
-            user = user_repo.create(email=data.email, hashed_password=get_password_hash(data.password))
+            try:
+                user = user_repo.create(email=data.email, hashed_password=get_password_hash(data.password))
+            except IntegrityError:
+                db.rollback()
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="E-mail já cadastrado")
         token = create_access_token(subject=str(user.id), expires_minutes=settings.access_token_expire_minutes)
         return TokenResponse(access_token=token, expires_in=settings.access_token_expire_minutes * 60)
     user = authenticate_user(user_repo, data.email, data.password, verify_password)
