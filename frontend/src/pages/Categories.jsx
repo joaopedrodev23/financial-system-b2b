@@ -1,21 +1,30 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import Layout from '../components/Layout'
 import { createCategory, deleteCategory, listCategories, updateCategory } from '../api/categories'
 
 const emptyForm = { name: '', type: 'income' }
 
 export default function Categories() {
+  const isMounted = useRef(true)
   const [categories, setCategories] = useState([])
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState(null)
 
   const loadData = async () => {
-    const data = await listCategories()
-    setCategories(data)
+    try {
+      const data = await listCategories()
+      if (!isMounted.current) return
+      setCategories(data)
+    } catch (error) {
+      console.error('Falha ao carregar categorias.', error)
+    }
   }
 
   useEffect(() => {
     loadData()
+    return () => {
+      isMounted.current = false
+    }
   }, [])
 
   const handleSubmit = async (event) => {

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import Layout from '../components/Layout'
 import Card from '../components/Card'
 import { getDashboardSummary } from '../api/dashboard'
@@ -6,27 +6,36 @@ import { listTransactions } from '../api/transactions'
 import { formatCurrency, formatDate } from '../utils/format'
 
 export default function Dashboard() {
+  const isMounted = useRef(true)
   const [summary, setSummary] = useState(null)
   const [transactions, setTransactions] = useState([])
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
 
   const loadData = async () => {
-    const params = {}
-    if (startDate) params.start_date = startDate
-    if (endDate) params.end_date = endDate
+    try {
+      const params = {}
+      if (startDate) params.start_date = startDate
+      if (endDate) params.end_date = endDate
 
-    const [summaryData, transactionsData] = await Promise.all([
-      getDashboardSummary(params),
-      listTransactions(params)
-    ])
+      const [summaryData, transactionsData] = await Promise.all([
+        getDashboardSummary(params),
+        listTransactions(params)
+      ])
 
-    setSummary(summaryData)
-    setTransactions(transactionsData.slice(0, 5))
+      if (!isMounted.current) return
+      setSummary(summaryData)
+      setTransactions(transactionsData.slice(0, 5))
+    } catch (error) {
+      console.error('Falha ao carregar dados do dashboard.', error)
+    }
   }
 
   useEffect(() => {
     loadData()
+    return () => {
+      isMounted.current = false
+    }
   }, [])
 
   return (

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import Layout from '../components/Layout'
 import { listCategories } from '../api/categories'
 import {
@@ -19,6 +19,7 @@ const emptyForm = {
 }
 
 export default function Transactions() {
+  const isMounted = useRef(true)
   const [transactions, setTransactions] = useState([])
   const [categories, setCategories] = useState([])
   const [editingId, setEditingId] = useState(null)
@@ -31,22 +32,30 @@ export default function Transactions() {
   const [form, setForm] = useState(emptyForm)
 
   const loadData = async () => {
-    const params = {}
-    if (filters.start_date) params.start_date = filters.start_date
-    if (filters.end_date) params.end_date = filters.end_date
-    if (filters.type) params.type = filters.type
-    if (filters.category_id) params.category_id = filters.category_id
+    try {
+      const params = {}
+      if (filters.start_date) params.start_date = filters.start_date
+      if (filters.end_date) params.end_date = filters.end_date
+      if (filters.type) params.type = filters.type
+      if (filters.category_id) params.category_id = filters.category_id
 
-    const [transactionsData, categoriesData] = await Promise.all([
-      listTransactions(params),
-      listCategories()
-    ])
-    setTransactions(transactionsData)
-    setCategories(categoriesData)
+      const [transactionsData, categoriesData] = await Promise.all([
+        listTransactions(params),
+        listCategories()
+      ])
+      if (!isMounted.current) return
+      setTransactions(transactionsData)
+      setCategories(categoriesData)
+    } catch (error) {
+      console.error('Falha ao carregar movimentacoes.', error)
+    }
   }
 
   useEffect(() => {
     loadData()
+    return () => {
+      isMounted.current = false
+    }
   }, [])
 
   const handleSubmit = async (event) => {
