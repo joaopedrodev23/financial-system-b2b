@@ -18,10 +18,12 @@ class Settings(BaseSettings):
 
     allowed_origins: str = "http://localhost:5173"
     environment: str = "development"
+    auto_create_db: bool = True
+    enable_csv_export: bool = True
     demo_mode: bool = False
+    enable_default_categories: bool = False
     demo_email: str = "demo@empresa.com"
     demo_password: str = "demo123"
-    auto_create_db: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False)
 

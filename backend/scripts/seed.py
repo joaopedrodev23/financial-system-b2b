@@ -88,6 +88,10 @@ def main() -> None:
     try:
         demo_user = get_or_create_user(db, DEMO_EMAIL, DEMO_PASSWORD)
 
+        if not settings.enable_default_categories:
+            print("Categorias padrão desativadas. Seed de categorias e transações ignorado.")
+            return
+
         categories = {
             "Vendas": get_or_create_category(db, demo_user.id, "Vendas", CategoryType.INCOME),
             "Serviços": get_or_create_category(db, demo_user.id, "Serviços", CategoryType.INCOME),

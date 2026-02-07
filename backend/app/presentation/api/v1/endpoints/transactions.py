@@ -11,6 +11,7 @@ from app.application.use_cases.transactions.crud import (
     list_transactions,
     update_transaction,
 )
+from app.core.config import get_settings
 from app.domain.entities.transaction import TransactionType
 from app.infrastructure.db.session import get_db
 from app.infrastructure.db.repositories.category_repository_impl import CategoryRepositoryImpl
@@ -18,6 +19,7 @@ from app.infrastructure.db.repositories.transaction_repository_impl import Trans
 from app.presentation.deps import get_current_user
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
+settings = get_settings()
 
 
 def _validate_category(db, user_id, category_id: UUID | None):
@@ -96,6 +98,8 @@ def export_csv(
     db=Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    if not settings.enable_csv_export:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Exportação CSV desativada")
     repo = TransactionRepositoryImpl(db)
     transactions = list_transactions(repo, current_user.id, start_date, end_date, type, category_id)
 
