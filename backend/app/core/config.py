@@ -1,5 +1,11 @@
-﻿from functools import lru_cache
+﻿import logging
+import sys
+from functools import lru_cache
+
+from pydantic import ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = logging.getLogger("app.config")
 
 
 class Settings(BaseSettings):
@@ -41,4 +47,17 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    try:
+        return Settings()
+    except ValidationError as exc:
+        fields = sorted({str(err.get("loc", ["unknown"])[0]) for err in exc.errors()})
+        if fields:
+            message = "Config error: invalid or missing environment variables: %s" % ", ".join(fields)
+        else:
+            message = "Config error: invalid or missing environment variables."
+
+        if logger.hasHandlers():
+            logger.error(message)
+        else:
+            print(message, file=sys.stderr)
+        raise
