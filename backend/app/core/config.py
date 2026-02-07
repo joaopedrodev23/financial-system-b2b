@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     demo_mode: bool = False
     demo_email: str = "demo@empresa.com"
     demo_password: str = "demo123"
+    auto_create_db: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False)
 

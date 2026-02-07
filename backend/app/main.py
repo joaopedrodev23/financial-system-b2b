@@ -22,7 +22,8 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup():
     # Para MVP: cria as tabelas automaticamente se não existirem.
-    Base.metadata.create_all(bind=engine)
+    if settings.auto_create_db:
+        Base.metadata.create_all(bind=engine)
 
 
 app.include_router(api_router, prefix=settings.api_v1_str)
